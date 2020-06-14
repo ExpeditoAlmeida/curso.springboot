@@ -1,9 +1,15 @@
 package curso.springboot.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,8 +42,26 @@ public class PessoaController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "**/salvarpessoa")
-	public ModelAndView salvar(Pessoa pessoa) {
+	public ModelAndView salvar(@Valid Pessoa pessoa, BindingResult bindingResult) {
 		pessoaRepository.save(pessoa);
+
+		// BindingResult objeto usado para retorna a mensagem de validação da respectiva
+		// classe...
+		if (bindingResult.hasErrors()) {
+			ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
+			Iterable<Pessoa> pessoasIt = pessoaRepository.findAll();
+			andView.addObject("pessoas", pessoasIt);
+			andView.addObject("pessoaobj", pessoa); // pessoa (retorna o objeto vindo da view)
+
+			List<String> msg = new ArrayList<String>();
+			for (ObjectError error : bindingResult.getAllErrors()) {
+				msg.add(error.getDefaultMessage()); // getDefaultMessage() retorna as mensagem de validação da
+													// respectiva classe.
+			}
+
+			andView.addObject("msg", msg);
+			return andView;
+		}
 
 		//////////////// LIstar//////////////////////
 		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
@@ -114,6 +138,28 @@ public class PessoaController {
 	@PostMapping("**/addfonePessoa/{pessoaid}")
 	public ModelAndView addFonePessoa(Telefone telefone, @PathVariable("pessoaid") Long pessoaid) {
 		Pessoa pessoa = pessoaRepository.findById(pessoaid).get();
+
+		// Validação para telefone na camada do backend
+		if (telefone != null && telefone.getNumero().isEmpty() || telefone.getTipo().isEmpty()) {
+
+			ModelAndView andView = new ModelAndView("cadastro/telefones");
+			andView.addObject("pessoaobj", pessoa);
+			andView.addObject("telefones", telefoneRepository.getTelefones(pessoaid));
+
+			List<String> msg = new ArrayList<String>();
+			if (telefone.getNumero().isEmpty()) {
+				msg.add("Numero deve ser informado");
+			}
+
+			if (telefone.getTipo().isEmpty()) {
+				msg.add("Tipo deve ser informado");
+			}
+
+			andView.addObject("msg", msg);
+			return andView;
+
+		}
+
 		telefone.setPessoa(pessoa);
 		telefoneRepository.save(telefone);
 
