@@ -43,8 +43,8 @@ public class PessoaController {
 
 	@RequestMapping(method = RequestMethod.POST, value = "**/salvarpessoa")
 	public ModelAndView salvar(@Valid Pessoa pessoa, BindingResult bindingResult) {
-		pessoaRepository.save(pessoa);
 
+		pessoa.setTelefones(telefoneRepository.getTelefones(pessoa.getId()));
 		// BindingResult objeto usado para retorna a mensagem de validação da respectiva
 		// classe...
 		if (bindingResult.hasErrors()) {
@@ -63,6 +63,7 @@ public class PessoaController {
 			return andView;
 		}
 
+		pessoaRepository.save(pessoa);
 		//////////////// LIstar//////////////////////
 		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
 		Iterable<Pessoa> pessoasIt = pessoaRepository.findAll();

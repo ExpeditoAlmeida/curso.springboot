@@ -8,6 +8,7 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.ForeignKey;
 
+@SuppressWarnings("deprecation")
 @Entity
 public class Telefone {
 
@@ -19,7 +20,6 @@ public class Telefone {
 
 	private String tipo;
 
-	@SuppressWarnings("deprecation")
 	@ForeignKey(name = "pessoa_id")
 	@ManyToOne
 	private Pessoa pessoa;
