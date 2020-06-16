@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:th="http://www.thymeleaf.org">
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
@@ -57,7 +58,7 @@ form  input[type=submit] {
 						th:field="*{sobrenome}">
 				</div>
 			</div>
-			<div class="row">
+			<div class="row" sec:authorize="hasAnyRole('ROLE_ADMIN')">
 				<div class="input-fiel col s12">
 					<label for="idade" class="active">Idade</label><input name="idade"
 						id="idade" class="validate" th:field="*{idade}">
