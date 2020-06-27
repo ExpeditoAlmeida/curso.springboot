@@ -23,6 +23,7 @@ import org.springframework.web.servlet.ModelAndView;
 import curso.springboot.model.Pessoa;
 import curso.springboot.model.Telefone;
 import curso.springboot.repository.PessoaRepository;
+import curso.springboot.repository.ProfissaoRepository;
 import curso.springboot.repository.TelefoneRepository;
 
 @Controller
@@ -37,12 +38,18 @@ public class PessoaController {
 	@Autowired
 	private ReportUtil reportUtil;
 
+	@Autowired
+	private ProfissaoRepository profissaoRepository;
+
 	@RequestMapping(method = RequestMethod.GET, value = "/cadastropessoa")
 	public ModelAndView inicio() {
 		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
 		Iterable<Pessoa> pessoasIt = pessoaRepository.findAll();
+		// 'pessoas', 'pessoaobj', 'profissoes' é uma variavel para trabalhar com a
+		// tela;
 		andView.addObject("pessoas", pessoasIt);
 		andView.addObject("pessoaobj", new Pessoa());
+		andView.addObject("profissoes", profissaoRepository.findAll());
 		return andView;
 	}
 
@@ -65,6 +72,7 @@ public class PessoaController {
 			}
 
 			andView.addObject("msg", msg);
+			andView.addObject("profissoes", profissaoRepository.findAll());
 			return andView;
 		}
 
@@ -102,7 +110,7 @@ public class PessoaController {
 		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
 
 		andView.addObject("pessoaobj", pessoa.get());
-
+		andView.addObject("profissoes", profissaoRepository.findAll());
 		return andView;
 	}
 

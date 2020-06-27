@@ -77,6 +77,30 @@ form  input[type=submit] {
 				</div>
 
 				<div class="row">
+					<div class="input-fiel col s2">
+						<label for="idade" class="active">Idade</label><input name="idade"
+							id="idade" class="validate" th:field="*{idade}">
+					</div>
+
+					<div class="input-fiel col s5">
+						<label for="profissao" class="active">Profissão</label> <select
+							class="browser-default" th:field="*{profissao}" id="profissao">
+							<option th:each="p : ${profissoes}" th:value="${p.id}"
+								th:text="${p.nome}">
+						</select>
+					</div>
+
+					<div class="input-fiel col s5">
+						<label for="cargo" class="active">Cargo</label> <select
+							class="browser-default" th:field="*{cargo}" id="cargo">
+							<option th:each="c : ${T(curso.springboot.model.Cargo).values()}"
+								th:value="${c.valor}" th:text="${c.nome}">
+						</select>
+					</div>
+
+				</div>
+
+				<div class="row">
 					<div class="input-fiel col s12">
 						<label for="cep" class="active">Cep</label><input name="cep"
 							id="cep" class="validate" th:field="*{cep}"
@@ -119,12 +143,7 @@ form  input[type=submit] {
 					</div>
 				</div>
 
-				<div class="row">
-					<div class="input-fiel col s12">
-						<label for="idade" class="active">Idade</label><input name="idade"
-							id="idade" class="validate" th:field="*{idade}">
-					</div>
-				</div>
+
 				<div class="row">
 					<div class="input-fiel col s6">
 						<input class="waves-effect waves-light btn" type="submit"

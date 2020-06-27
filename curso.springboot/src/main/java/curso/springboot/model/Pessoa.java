@@ -5,9 +5,12 @@ import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
@@ -49,6 +52,12 @@ public class Pessoa implements Serializable {
 
 	@OneToMany(mappedBy = "pessoa", orphanRemoval = true, cascade = CascadeType.ALL)
 	private List<Telefone> telefones;
+
+	@ManyToOne
+	private Profissao profissao;
+
+	@Enumerated(EnumType.STRING)
+	private Cargo cargo;
 
 	public Long getId() {
 		return id;
@@ -144,6 +153,22 @@ public class Pessoa implements Serializable {
 
 	public void setSexopessoa(String sexopessoa) {
 		this.sexopessoa = sexopessoa;
+	}
+
+	public Profissao getProfissao() {
+		return profissao;
+	}
+
+	public void setProfissao(Profissao profissao) {
+		this.profissao = profissao;
+	}
+
+	public Cargo getCargo() {
+		return cargo;
+	}
+
+	public void setCargo(Cargo cargo) {
+		this.cargo = cargo;
 	}
 
 }
