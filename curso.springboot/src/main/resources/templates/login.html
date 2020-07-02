@@ -5,36 +5,49 @@
 <meta charset="UTF-8">
 <title>Insert title here</title>
 
- <!-- Compiled and minified CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+<!-- Compiled and minified CSS -->
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 
-    <!-- Compiled and minified JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-            
+<!-- Compiled and minified JavaScript -->
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
 
 
 <style type="text/css">
 form  input[type=submit] {
 	color: white;
 }
+
+form {
+	margin-left: 35%;
+	margin-top: 11%;
+}
+
+.col .row {
+	margin-right: 0rem;
+}
 </style>
 
 </head>
 <body>
 
-	<h1>Acesso ao sistema</h1>
 	<form th:action="@{/login}" method="post" class="col s12">
+		<h5>Acesso ao sistema</h5>
 		<div class="row">
 			<div class="input-fiel col s6">
 
-				<label>Login</label> <input type="text" name="username">
+				<label>Login</label> <input type="text" name="username"
+					style="border-radius: 7px; border-bottom: none;">
 			</div>
 		</div>
 
 		<div class="row">
 			<div class="input-fiel col s6">
 
-				<label>Senha</label> <input type="password" name="password">
+				<label>Senha</label> <input type="password" name="password"
+					style="border-radius: 7px; border-bottom: none;">
 			</div>
 
 
@@ -43,7 +56,7 @@ form  input[type=submit] {
 		<div class="row">
 			<div class="input-fiel col s6">
 				<input class="waves-effect waves-light btn" type="submit"
-					value="Logar" name="Logar">
+					value="Acessar" name="Logar">
 			</div>
 		</div>
 	</form>

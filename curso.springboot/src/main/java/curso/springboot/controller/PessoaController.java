@@ -10,6 +10,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -43,43 +48,49 @@ public class PessoaController {
 	@Autowired
 	private ProfissaoRepository profissaoRepository;
 
-	@RequestMapping(method = RequestMethod.GET, value = "/cadastropessoa")
+	@RequestMapping(method = RequestMethod.GET, value = "**/cadastropessoa")
 	public ModelAndView inicio() {
-		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
-		Iterable<Pessoa> pessoasIt = pessoaRepository.findAll();
-		// 'pessoas', 'pessoaobj', 'profissoes' é uma variavel para trabalhar com a
-		// tela;
-		andView.addObject("pessoas", pessoasIt);
-		andView.addObject("pessoaobj", new Pessoa());
-		andView.addObject("profissoes", profissaoRepository.findAll());
-		return andView;
+
+		ModelAndView modelAndView = new ModelAndView("cadastro/cadastropessoa");
+		modelAndView.addObject("pessoaobj", new Pessoa());
+		modelAndView.addObject("pessoas", pessoaRepository.findAll(PageRequest.of(0, 5, Sort.by("nome"))));
+		modelAndView.addObject("profissoes", profissaoRepository.findAll());
+		return modelAndView;
+	}
+
+	@GetMapping("/pessoaspag")
+	public ModelAndView carregaPessoaPorPaginacao(@PageableDefault(size = 5) Pageable pageable, ModelAndView model,
+			@RequestParam("nomepesquisa") String nomepesquisa) {
+
+		Page<Pessoa> pagePessoa = pessoaRepository.findPessoaByNamePage(nomepesquisa, pageable);
+		model.addObject("pessoas", pagePessoa);
+		model.addObject("pessoaobj", new Pessoa());
+		model.addObject("nomepesquisa", nomepesquisa);
+		model.setViewName("cadastro/cadastropessoa");
+
+		return model;
+
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "**/salvarpessoa", consumes = { "multipart/form-data" })
 	public ModelAndView salvar(@Valid Pessoa pessoa, BindingResult bindingResult, final MultipartFile file)
 			throws IOException {
 
-		System.out.println(file.getContentType());
-		System.out.println(file.getOriginalFilename());
-
 		pessoa.setTelefones(telefoneRepository.getTelefones(pessoa.getId()));
-		// BindingResult objeto usado para retorna a mensagem de validação da respectiva
-		// classe...
+
 		if (bindingResult.hasErrors()) {
-			ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
-			Iterable<Pessoa> pessoasIt = pessoaRepository.findAll();
-			andView.addObject("pessoas", pessoasIt);
-			andView.addObject("pessoaobj", pessoa); // pessoa (retorna o objeto vindo da view)
+			ModelAndView modelAndView = new ModelAndView("cadastro/cadastropessoa");
+			modelAndView.addObject("pessoas", pessoaRepository.findAll(PageRequest.of(0, 5, Sort.by("nome"))));
+			modelAndView.addObject("pessoaobj", pessoa);
 
 			List<String> msg = new ArrayList<String>();
-			for (ObjectError error : bindingResult.getAllErrors()) {
-				msg.add(error.getDefaultMessage()); // getDefaultMessage() retorna as mensagem de validação da
-													// respectiva classe.
+			for (ObjectError objectError : bindingResult.getAllErrors()) {
+				msg.add(objectError.getDefaultMessage()); // vem das anotaÃ§Ãµes @NotEmpty e outras
 			}
 
-			andView.addObject("msg", msg);
-			andView.addObject("profissoes", profissaoRepository.findAll());
-			return andView;
+			modelAndView.addObject("msg", msg);
+			modelAndView.addObject("profissoes", profissaoRepository.findAll());
+			return modelAndView;
 		}
 
 		if (file.getSize() > 0) { /* Cadastrando um curriculo */
@@ -96,74 +107,71 @@ public class PessoaController {
 				pessoa.setNomeFileCurriculo(pessoalTemp.getNomeFileCurriculo());
 			}
 		}
-		pessoaRepository.save(pessoa);
-		//////////////// LIstar//////////////////////
-		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
-		Iterable<Pessoa> pessoasIt = pessoaRepository.findAll();
-		andView.addObject("pessoas", pessoasIt);
 
-		////////////////////////////////////
-		// objeto vazio para o form trabalhar
+		pessoaRepository.save(pessoa);
+
+		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
+		andView.addObject("pessoas", pessoaRepository.findAll(PageRequest.of(0, 5, Sort.by("nome"))));
 		andView.addObject("pessoaobj", new Pessoa());
+
 		return andView;
+
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/listapessoas")
 	public ModelAndView pessoas() {
 		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
-		Iterable<Pessoa> pessoasIt = pessoaRepository.findAll();
-		andView.addObject("pessoas", pessoasIt);
-		// objeto vazio para o form trabalhar
+		andView.addObject("pessoas", pessoaRepository.findAll(PageRequest.of(0, 5, Sort.by("nome"))));
 		andView.addObject("pessoaobj", new Pessoa());
 		return andView;
 	}
 
-	// "/editarpessoa/{idpessoa} url é paramentro da tela" //anotação @GetMapping
-	// substitui @RequestMapping(method = RequestMethod.GET
 	@GetMapping("/editarpessoa/{idpessoa}")
 	public ModelAndView editar(@PathVariable("idpessoa") Long idpessoa) {
 
-		// carrega o objeto do banco
 		Optional<Pessoa> pessoa = pessoaRepository.findById(idpessoa);
 
-		// prepara o retorno para a tela designada
-		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
+		ModelAndView modelAndView = new ModelAndView("cadastro/cadastropessoa");
+		modelAndView.addObject("pessoaobj", pessoa.get());
+		modelAndView.addObject("profissoes", profissaoRepository.findAll());
+		return modelAndView;
 
-		andView.addObject("pessoaobj", pessoa.get());
-		andView.addObject("profissoes", profissaoRepository.findAll());
-		return andView;
 	}
 
 	@GetMapping("/removerpessoa/{idpessoa}")
 	public ModelAndView excluir(@PathVariable("idpessoa") Long idpessoa) {
 
 		pessoaRepository.deleteById(idpessoa);
-		// prepara o retorno para a tela designada
-		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
 
-		andView.addObject("pessoas", pessoaRepository.findAll());
-		andView.addObject("pessoaobj", new Pessoa());
-		return andView;
+		ModelAndView modelAndView = new ModelAndView("cadastro/cadastropessoa");
+		modelAndView.addObject("pessoas", pessoaRepository.findAll(PageRequest.of(0, 5, Sort.by("nome"))));
+		modelAndView.addObject("pessoaobj", new Pessoa());
+		return modelAndView;
+
 	}
 
 	@PostMapping("**/pesquisarpessoa")
 	public ModelAndView pesquisar(@RequestParam("nomepesquisa") String nomepesquisa,
-			@RequestParam("pesqsexo") String pesqsexo) {
+			@RequestParam("pesqsexo") String pesqsexo,
+			@PageableDefault(size = 5, sort = { "nome" }) Pageable pageable) {
 
-		List<Pessoa> pessoas = new ArrayList<Pessoa>();
+		Page<Pessoa> pessoas = null;
+
 		if (pesqsexo != null && !pesqsexo.isEmpty()) {
-			pessoas = pessoaRepository.findPessoaByNameSexo(nomepesquisa, pesqsexo);
+			pessoas = pessoaRepository.findPessoaBySexoPage(nomepesquisa, pesqsexo, pageable);
 		} else {
-			pessoas = pessoaRepository.findPessoaBynome(nomepesquisa);
+
+			pessoas = pessoaRepository.findPessoaByNamePage(nomepesquisa, pageable);
 		}
 
-		ModelAndView andView = new ModelAndView("cadastro/cadastropessoa");
-		andView.addObject("pessoas", pessoas);
-		andView.addObject("pessoaobj", new Pessoa());
-		return andView;
+		ModelAndView modelAndView = new ModelAndView("cadastro/cadastropessoa");
+		modelAndView.addObject("pessoas", pessoas);
+		modelAndView.addObject("pessoaobj", new Pessoa());
+		modelAndView.addObject("nomepesquisa", nomepesquisa);
+
+		return modelAndView;
 	}
 
-	// Mapeamento para a tela com respectivo dado
 	@GetMapping("**/baixarcurriculo/{idpessoa}")
 	public void baixarcurriculo(@PathVariable("idpessoa") Long idpessoa, HttpServletResponse response)
 			throws IOException {
@@ -241,28 +249,26 @@ public class PessoaController {
 	@GetMapping("/telefones/{idpessoa}")
 	public ModelAndView telefones(@PathVariable("idpessoa") Long idpessoa) {
 
-		// carrega o objeto do banco
 		Optional<Pessoa> pessoa = pessoaRepository.findById(idpessoa);
 
-		// prepara o retorno para a tela designada
-		ModelAndView andView = new ModelAndView("cadastro/telefones");
+		ModelAndView modelAndView = new ModelAndView("cadastro/telefones");
+		modelAndView.addObject("pessoaobj", pessoa.get());
+		modelAndView.addObject("msg", new ArrayList<String>());
+		modelAndView.addObject("telefones", telefoneRepository.getTelefones(idpessoa));
+		return modelAndView;
 
-		andView.addObject("pessoaobj", pessoa.get());
-		// ação para carregar a lista de telefone da respectiva pessoa
-		andView.addObject("telefones", telefoneRepository.getTelefones(idpessoa));
-		return andView;
 	}
 
 	@PostMapping("**/addfonePessoa/{pessoaid}")
 	public ModelAndView addFonePessoa(Telefone telefone, @PathVariable("pessoaid") Long pessoaid) {
+
 		Pessoa pessoa = pessoaRepository.findById(pessoaid).get();
 
-		// Validação para telefone na camada do backend
 		if (telefone != null && telefone.getNumero().isEmpty() || telefone.getTipo().isEmpty()) {
 
-			ModelAndView andView = new ModelAndView("cadastro/telefones");
-			andView.addObject("pessoaobj", pessoa);
-			andView.addObject("telefones", telefoneRepository.getTelefones(pessoaid));
+			ModelAndView modelAndView = new ModelAndView("cadastro/telefones");
+			modelAndView.addObject("pessoaobj", pessoa);
+			modelAndView.addObject("telefones", telefoneRepository.getTelefones(pessoaid));
 
 			List<String> msg = new ArrayList<String>();
 			if (telefone.getNumero().isEmpty()) {
@@ -272,20 +278,21 @@ public class PessoaController {
 			if (telefone.getTipo().isEmpty()) {
 				msg.add("Tipo deve ser informado");
 			}
+			modelAndView.addObject("msg", msg);
 
-			andView.addObject("msg", msg);
-			return andView;
+			return modelAndView;
 
 		}
 
+		ModelAndView modelAndView = new ModelAndView("cadastro/telefones");
+
 		telefone.setPessoa(pessoa);
+
 		telefoneRepository.save(telefone);
 
-		ModelAndView andView = new ModelAndView("cadastro/telefones");
-		andView.addObject("pessoaobj", pessoa);
-		andView.addObject("telefones", telefoneRepository.getTelefones(pessoaid));
-		return andView;
-
+		modelAndView.addObject("pessoaobj", pessoa);
+		modelAndView.addObject("telefones", telefoneRepository.getTelefones(pessoaid));
+		return modelAndView;
 	}
 
 	@GetMapping("/removertelefone/{idtelefone}")
@@ -295,11 +302,11 @@ public class PessoaController {
 
 		telefoneRepository.deleteById(idtelefone);
 
-		ModelAndView andView = new ModelAndView("cadastro/telefones");
+		ModelAndView modelAndView = new ModelAndView("cadastro/telefones");
+		modelAndView.addObject("pessoaobj", pessoa);
+		modelAndView.addObject("telefones", telefoneRepository.getTelefones(pessoa.getId()));
+		return modelAndView;
 
-		andView.addObject("pessoas", pessoaRepository.findAll());
-		andView.addObject("pessoaobj", pessoa);
-		andView.addObject("telefones", telefoneRepository.getTelefones(pessoa.getId()));
-		return andView;
 	}
+
 }
